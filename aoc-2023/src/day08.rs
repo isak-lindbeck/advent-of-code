@@ -51,7 +51,7 @@ impl<'a> StepCounter<'_> {
         let mut current = start;
         let mut count = 0;
         while !current.ends_with("Z") {
-            let next_pair = self.map.get(current).unwrap();
+            let next_pair = self.map[current];
             current = match directions.next().unwrap() {
                 Direction::Left => next_pair.0,
                 Direction::Right => next_pair.1,

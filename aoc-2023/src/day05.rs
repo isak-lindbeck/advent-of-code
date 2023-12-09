@@ -2,8 +2,7 @@ use itertools::Itertools;
 
 pub fn run(input: String) -> (usize, usize) {
     let split: Vec<&str> = input.split("\n\n").collect();
-    let seeds = split[0].replace("seeds: ", "").trim().split(" ")
-        .map(|s| s.trim())
+    let seeds = split[0].replace("seeds: ", "").split(" ")
         .filter(|s| !s.is_empty())
         .map(|s| s.parse().unwrap())
         .collect::<Vec<i64>>();

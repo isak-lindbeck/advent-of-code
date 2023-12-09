@@ -11,7 +11,7 @@ pub fn run(input: String) -> (usize, usize) {
     for (line_idx, line) in lines.iter().enumerate() {
         let prev_line_idx = line_idx.checked_sub(1).unwrap_or(0);
         let next_line_idx = cmp::min(line_idx + 1, lines.len() - 1);
-        let nearby_lines = lines.get(prev_line_idx..=next_line_idx).unwrap();
+        let nearby_lines: &[&str] = &lines[prev_line_idx..=next_line_idx];
 
         let mut start_idx = 0;
         let mut in_number = false;
@@ -25,7 +25,7 @@ pub fn run(input: String) -> (usize, usize) {
                 start_idx = char_idx;
             } else if exiting_number {
                 let end_idx = char_idx;
-                let number = line.get(start_idx..end_idx).unwrap().parse::<i32>().unwrap();
+                let number = line[start_idx..end_idx].parse::<i32>().unwrap();
 
                 let from_idx = start_idx.checked_sub(1).unwrap_or(0);
                 let to_idx = cmp::min(end_idx + 1, line.len());
@@ -40,8 +40,7 @@ pub fn run(input: String) -> (usize, usize) {
                 nearby_lines.iter().zip(prev_line_idx..)
                     .for_each(|(nearby_line, line_idx)| {
                         nearby_line.chars().enumerate()
-                            .filter(|(char_idx, _)| *char_idx >= from_idx)
-                            .filter(|(char_idx, _)| *char_idx < to_idx)
+                            .filter(|(c_idx, _)| (from_idx..to_idx).contains(c_idx))
                             .filter(|(_, c)| *c == '*')
                             .for_each(|(char_idx, _)| {
                                 gear_map.entry((line_idx, char_idx))

@@ -3,7 +3,6 @@ use regex_macro::regex;
 use crate::util::split_parse;
 
 pub fn run(input: String) -> (usize, usize) {
-    let input = input;
     let input = regex!(r" +").replace_all(&input, " ");
     let input = regex!(r"Card +\d+: +").replace_all(&input, "");
 
