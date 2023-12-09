@@ -1,5 +1,7 @@
 use regex_macro::regex;
 
+use crate::util::split_parse;
+
 pub fn run(input: String) -> (usize, usize) {
     let input = input;
     let input = regex!(r" +").replace_all(&input, " ");
@@ -9,11 +11,8 @@ pub fn run(input: String) -> (usize, usize) {
     let mut ans_1 = 0;
     for (line_idx, line) in input.lines().enumerate() {
         let split: Vec<&str> = line.split(" | ").collect();
-        let drawn_numbers: Vec<usize> = split[1].split(" ")
-            .map(|s| s.parse().unwrap())
-            .collect();
-        let winners = split[0].split(" ")
-            .map(|s| s.parse().unwrap())
+        let drawn_numbers: Vec<usize> = split_parse(" ", split[1]);
+        let winners = split_parse(" ", split[0]).iter()
             .filter(|n| drawn_numbers.contains(n))
             .count();
 
