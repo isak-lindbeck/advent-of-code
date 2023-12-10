@@ -1,33 +1,20 @@
 use std::collections::HashSet;
 
-use crate::day10::Pipe::*;
-
 pub fn run(input: String) -> (usize, usize) {
     let input = input;
 
+    let input = clean(input);
+
     let len = input.lines().next().unwrap().len();
-    let mut map: Vec<Vec<Pipe>> = vec![vec![Ground; len]; len];
+    let mut map: Vec<Vec<char>> = vec![vec!['.'; len]; len];
 
     input.lines().enumerate().for_each(|(y, line)| {
-        line.chars().enumerate().for_each(|(x, c)| {
-            let p = match c {
-                '|' => UpToDown,
-                '-' => LeftToRight,
-                'F' => DownToRight,
-                'L' => UpToRight,
-                '7' => DownToLeft,
-                'J' => UpToLeft,
-                '.' => Ground,
-                'S' => Start,
-                _ => panic!("Unknown pipe! {}", c)
-            };
-            map[x][len - 1 - y] = p;
-        });
+        line.chars().enumerate().for_each(|(x, c)| map[x][len - 1 - y] = c);
     });
 
     let start: Coord = map.iter().enumerate().find_map(|(x, line)| {
         line.iter().enumerate().find_map(|(y, pipe)| {
-            if *pipe == Start {
+            if *pipe == 'S' {
                 Some(Coord { x: x as i32, y: y as i32 })
             } else {
                 None
@@ -35,18 +22,51 @@ pub fn run(input: String) -> (usize, usize) {
         })
     }).unwrap();
 
-    map[start.x as usize][start.y as usize] = LeftToRight;
+    let left = map[(start.x - 1) as usize][start.y as usize];
+    let right = map[(start.x + 1) as usize][start.y as usize];
+    let up = map[start.x as usize][(start.y + 1) as usize];
+    let left: bool = left == '─' || left == '└' || left == '┌';
+    let right: bool = right == '─' || right == '┐' || right == '┘';
+    let up: bool = up == '│' || up == '┐' || up == '┘';
 
+    let start_char = match (left, right, up) {
+        (false, true, false) => '┌',
+        (false, true, true) => '└',
+        (true, true, false) => '─',
+        (true, false, false) => '┐',
+        (true, false, true) => '┘',
+        (false, false, true) => '│',
+        _ => panic!("Unknown start char"),
+    };
+
+    map[start.x as usize][start.y as usize] = start_char;
     let mut prev = start;
-    let mut current = Coord { x: start.x + 1, y: start.y }; // TODO fix
+    let mut current = match start_char {
+        '┌' | '└' | '─' => Coord { x: start.x + 1, y: start.y },
+        '┐' | '┘' => Coord { x: start.x - 1, y: start.y },
+        _ => Coord { x: start.x, y: start.y + 1 },
+    };
+
     let mut ans_1: usize = 1;
-    let mut visited: HashSet<(i32, i32)> = HashSet::new();
-    visited.insert((start.x, start.y));
+    let mut part_of_loop: HashSet<(i32, i32)> = HashSet::new();
+    part_of_loop.insert((start.x, start.y));
     while current != start {
-        visited.insert((current.x, current.y));
+        part_of_loop.insert((current.x, current.y));
         ans_1 += 1;
         let p = &map[current.x as usize][current.y as usize];
-        let next = p.follow(prev, current);
+
+        let dx: i32 = current.x - prev.x;
+        let dy: i32 = current.y - prev.y;
+        let next = match p {
+            '┌' => Coord { x: current.x + dy, y: current.y + dx },
+            '└' => Coord { x: current.x - dy, y: current.y - dx },
+            '─' => Coord { x: current.x + dx, y: current.y + dy },
+            '┐' => Coord { x: current.x - dy, y: current.y - dx },
+            '┘' => Coord { x: current.x + dy, y: current.y + dx },
+            '│' => Coord { x: current.x + dx, y: current.y + dy },
+            _ => current,
+        };
+
         prev = current;
         current = next;
     }
@@ -54,44 +74,22 @@ pub fn run(input: String) -> (usize, usize) {
 
     let mut ans_2 = 0;
     for y in 0..len {
-        let y = len - 1 - y;
+        let mut loop_passings: i32 = 0;
+        let mut from_below = false;
         for x in 0..len {
-            let part_of_loop = visited.get(&(x as i32, y as i32)).is_some();
-            if !part_of_loop {
-                let mut value: i32 = 0;
-                let mut flag = Ground;
-                for dx in 1..=x {
-                    let xx = x - dx;
-                    let passed_tile = &map[xx][y];
-                    let part_of_loop = visited.get(&(xx as i32, y as i32)).is_some();
-                    if part_of_loop {
-                        match passed_tile {
-                            DownToRight => {
-                                if flag == UpToLeft {
-                                    value += 1;
-                                }
-                            }
-                            UpToRight => {
-                                if flag == DownToLeft {
-                                    value += 1;
-                                }
-                            }
-                            DownToLeft => {
-                                flag = DownToLeft;
-                            }
-                            UpToLeft => {
-                                flag = UpToLeft;
-                            }
-                            UpToDown => value += 1,
-                            LeftToRight => {}
-                            Start => {}
-                            Ground => {}
-                        };
-                    }
-                }
-                let inside = value % 2 == 1;
+            let on_loop = part_of_loop.get(&(x as i32, y as i32)).is_some();
 
-                if inside {
+            if on_loop {
+                match &map[x][y] {
+                    '┐' if !from_below => loop_passings = loop_passings + 1,
+                    '┘' if from_below => loop_passings = loop_passings + 1,
+                    '┌' => from_below = true,
+                    '└' => from_below = false,
+                    '│' => loop_passings += 1,
+                    _ => {}
+                }
+            } else {
+                if loop_passings % 2 == 1 {
                     ans_2 += 1;
                 }
             }
@@ -101,37 +99,19 @@ pub fn run(input: String) -> (usize, usize) {
     (ans_1, ans_2)
 }
 
-#[derive(PartialEq, Clone)]
-enum Pipe {
-    DownToRight,
-    UpToRight,
-    LeftToRight,
-    DownToLeft,
-    UpToLeft,
-    UpToDown,
-    Start,
-    Ground,
+fn clean(input: String) -> String {
+    let input = input
+        .replace("F", "┌")
+        .replace("L", "└")
+        .replace("-", "─")
+        .replace("7", "┐")
+        .replace("J", "┘")
+        .replace("|", "│");
+    input
 }
 
 #[derive(PartialEq, Clone, Copy)]
 struct Coord {
     x: i32,
     y: i32,
-}
-
-impl Pipe {
-    fn follow(&self, prev_coord: Coord, this_coord: Coord) -> Coord {
-        let dx: i32 = this_coord.x - prev_coord.x;
-        let dy: i32 = this_coord.y - prev_coord.y;
-        match self {
-            DownToRight => Coord { x: this_coord.x + dy, y: this_coord.y + dx },
-            UpToRight => Coord { x: this_coord.x - dy, y: this_coord.y - dx },
-            LeftToRight => Coord { x: this_coord.x + dx, y: this_coord.y + dy },
-            DownToLeft => Coord { x: this_coord.x - dy, y: this_coord.y - dx },
-            UpToLeft => Coord { x: this_coord.x + dy, y: this_coord.y + dx },
-            UpToDown => Coord { x: this_coord.x + dx, y: this_coord.y + dy },
-            Start => this_coord,
-            Ground => this_coord,
-        }
-    }
 }
