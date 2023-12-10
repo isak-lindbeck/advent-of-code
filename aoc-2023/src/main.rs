@@ -4,6 +4,7 @@ use std::{env, fs};
 use std::collections::HashMap;
 use std::time::SystemTime;
 
+use colored::Colorize;
 use regex_macro::regex;
 
 mod util;
@@ -16,9 +17,10 @@ mod day06;
 mod day07;
 mod day08;
 mod day09;
+mod day10;
 
 fn main() {
-    let mut days = 1..=8;
+    let mut days = 1..=10;
 
     let args: Vec<String> = env::args().collect();
     if args.len() > 1 {
@@ -41,10 +43,20 @@ fn main() {
             7 => { day07::run(input) }
             8 => { day08::run(input) }
             9 => { day09::run(input) }
+            10 => { day10::run(input) }
             _ => { panic!("Day {} is not implemented yet", day); }
         };
-        println!("Day {day}: {ans_1}, {ans_2}");
-        assert_eq!(answer_lookup[&day], (ans_1, ans_2));
+        // println!("Day {day}: {ans_1}, {ans_2}");
+
+        match answer_lookup.get(&day) {
+            Some((actual_1, actual_2)) if actual_1 == &ans_1 && actual_2 == &ans_2 => {
+                println!("Day {day}: {ans_1}, {ans_2}")
+            }
+            Some((actual_1, actual_2)) => {
+                println!("Day {day}: {ans_1}, {ans_2} {} expected: {actual_1}, {actual_2}!", "!!".red())
+            }
+            None => println!("Day {day}: {ans_1}, {ans_2} {} nothing to compare with", "??".blue()),
+        }
     }
 
     let duration = start.elapsed().unwrap();
