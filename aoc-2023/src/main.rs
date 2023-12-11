@@ -18,6 +18,7 @@ mod day07;
 mod day08;
 mod day09;
 mod day10;
+mod day11;
 
 fn main() {
     let mut days = 1..=10;
@@ -44,6 +45,7 @@ fn main() {
             8 => { day08::run(input) }
             9 => { day09::run(input) }
             10 => { day10::run(input) }
+            11 => { day11::run(input) }
             _ => { panic!("Day {} is not implemented yet", day); }
         };
         // println!("Day {day}: {ans_1}, {ans_2}");
