@@ -21,7 +21,7 @@ mod day10;
 mod day11;
 
 fn main() {
-    let mut days = 1..=10;
+    let mut days = 1..=11;
 
     let args: Vec<String> = env::args().collect();
     if args.len() > 1 {
@@ -48,7 +48,6 @@ fn main() {
             11 => { day11::run(input) }
             _ => { panic!("Day {} is not implemented yet", day); }
         };
-        // println!("Day {day}: {ans_1}, {ans_2}");
 
         match answer_lookup.get(&day) {
             Some((actual_1, actual_2)) if actual_1 == &ans_1 && actual_2 == &ans_2 => {

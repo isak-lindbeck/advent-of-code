@@ -22,11 +22,11 @@ pub fn run(input: String) -> (usize, usize) {
 
     let mut ans_1 = 0;
     let mut ans_2 = 0;
-    for v in galaxies.iter().combinations(2) {
-        let min_x = cmp::min(v[0].0, v[1].0);
-        let max_x = cmp::max(v[0].0, v[1].0);
-        let min_y = cmp::min(v[0].1, v[1].1);
-        let max_y = cmp::max(v[0].1, v[1].1);
+    for pair in galaxies.iter().combinations(2) {
+        let min_x = cmp::min(pair[0].0, pair[1].0);
+        let max_x = cmp::max(pair[0].0, pair[1].0);
+        let min_y = cmp::min(pair[0].1, pair[1].1);
+        let max_y = cmp::max(pair[0].1, pair[1].1);
 
         let x_range = min_x..max_x;
         let y_range = min_y..max_y;

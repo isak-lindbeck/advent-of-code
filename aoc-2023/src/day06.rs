@@ -1,3 +1,6 @@
+use std::ops::Div;
+
+use num::integer::sqrt;
 use regex_macro::regex;
 
 use crate::util::split_parse;
@@ -29,14 +32,7 @@ pub fn run(input: String) -> (usize, usize) {
 }
 
 fn calculate_race(max_wait_time: usize, distance_to_beat: usize) -> usize {
-    let mut win_count: usize = 0;
-    for wait_time in 0..max_wait_time {
-        let speed = wait_time;
-        let race_time = max_wait_time - wait_time;
-        let distance = speed * race_time;
-        if distance > distance_to_beat {
-            win_count += 1;
-        }
-    }
-    win_count
+    let a: usize = (max_wait_time + sqrt(max_wait_time.pow(2) - 4 * distance_to_beat)).div(2);
+    let b: usize = (max_wait_time - sqrt(max_wait_time.pow(2) - 4 * distance_to_beat)).div_ceil(2);
+    a - b + 1
 }
