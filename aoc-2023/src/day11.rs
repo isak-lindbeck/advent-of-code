@@ -22,7 +22,7 @@ pub fn run(input: String) -> (usize, usize) {
 
     let mut ans_1 = 0;
     let mut ans_2 = 0;
-    for pair in galaxies.iter().combinations(2) {
+    galaxies.iter().combinations(2).for_each(|pair|{
         let min_x = cmp::min(pair[0].0, pair[1].0);
         let max_x = cmp::max(pair[0].0, pair[1].0);
         let min_y = cmp::min(pair[0].1, pair[1].1);
@@ -38,7 +38,7 @@ pub fn run(input: String) -> (usize, usize) {
         let distance = x_range.count() + y_range.count();
         ans_1 += distance + empty_distance;
         ans_2 += distance + empty_distance * (1_000_000 - 1);
-    }
+    });
 
     (ans_1, ans_2)
 }

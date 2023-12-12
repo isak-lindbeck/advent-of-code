@@ -27,34 +27,14 @@ pub fn run(input: String) -> (usize, usize) {
 
         let dx: i32 = current.x - prev.x;
         let dy: i32 = current.y - prev.y;
-        prev.x = current.x;
-        prev.y = current.y;
-
-        match &map[current.x as usize][current.y as usize] {
-            '┌' => {
-                current.x = current.x + dy;
-                current.y = current.y + dx
-            }
-            '└' => {
-                current.x = current.x - dy;
-                current.y = current.y - dx
-            }
-            '─' => {
-                current.x = current.x + dx;
-                current.y = current.y + dy
-            }
-            '┐' => {
-                current.x = current.x - dy;
-                current.y = current.y - dx
-            }
-            '┘' => {
-                current.x = current.x + dy;
-                current.y = current.y + dx
-            }
-            '│' => {
-                current.x = current.x + dx;
-                current.y = current.y + dy
-            }
+        prev = current;
+        current = match &map[current.x as usize][current.y as usize] {
+            '┌' => Coord { x: current.x + dy, y: current.y + dx },
+            '└' => Coord { x: current.x - dy, y: current.y - dx },
+            '─' => Coord { x: current.x + dx, y: current.y + dy },
+            '┐' => Coord { x: current.x - dy, y: current.y - dx },
+            '┘' => Coord { x: current.x + dy, y: current.y + dx },
+            '│' => Coord { x: current.x + dx, y: current.y + dy },
             _ => panic!("Unknown char {}", &map[current.x as usize][current.y as usize]),
         };
     }
@@ -65,8 +45,7 @@ pub fn run(input: String) -> (usize, usize) {
         let mut loop_passings = 0;
         let mut from_below = false;
         for x in 0..len {
-            let on_loop = part_of_loop[x][y];
-            if on_loop {
+            if part_of_loop[x][y] {
                 match &map[x][y] {
                     '┐' if !from_below => loop_passings = loop_passings + 1,
                     '┘' if from_below => loop_passings = loop_passings + 1,
