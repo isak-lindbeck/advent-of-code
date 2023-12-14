@@ -4,28 +4,10 @@ const ROLLING: u8 = b'O';
 const EMPTY: u8 = b'.';
 const ANCHOR: u8 = b'#';
 
-fn parse_tile(c: char) -> u8 {
-    match c {
-        'O' => ROLLING,
-        '.' => EMPTY,
-        '#' => ANCHOR,
-        _ => panic!("Unknown input: {c}")
-    }
-}
-
 pub fn run(input: String) -> (usize, usize) {
-    let side = input.lines().count();
-    let mut map: Vec<Vec<u8>> = vec![vec![EMPTY; side]; side];
-
-    input.lines().enumerate().for_each(|(y, line)| {
-        line.chars().enumerate().for_each(|(x, c)| {
-            map[x][y] = parse_tile(c);
-        });
-    });
-
+    let mut map = parse_input(input);
     tilt_north(&mut map);
     let ans_1 = calculate_load(&map);
-
 
     let mut cache: HashMap<Vec<Vec<u8>>, usize> = HashMap::new();
     let mut cycle_count = 0;
@@ -51,16 +33,10 @@ pub fn run(input: String) -> (usize, usize) {
 }
 
 fn calculate_load(map: &Vec<Vec<u8>>) -> usize {
-    let side = map.len();
-    let mut sum = 0;
-    for y in 0..side {
-        for x in 0..side {
-            if map[x][y] == ROLLING {
-                sum += side - y;
-            }
-        }
-    }
-    sum
+    map.iter().flat_map(|v| v.iter().enumerate())
+        .filter(|(_, c)| *c == &ROLLING)
+        .map(|(y, _)| map.len() - y )
+        .sum()
 }
 
 fn tilt_north(map: &mut Vec<Vec<u8>>) {
@@ -100,15 +76,15 @@ fn tilt_west(map: &mut Vec<Vec<u8>>) {
 fn tilt_south(map: &mut Vec<Vec<u8>>) {
     let side = map.len();
     for x in 0..side {
-        let mut last_free = side - 1;
+        let mut last_stuck = side;
         for y in (0..side).rev() {
-            if map[x][y] == ANCHOR && y != 0 {
-                last_free = y - 1;
+            if map[x][y] == ANCHOR {
+                last_stuck = y;
             }
-            if map[x][y] == ROLLING && last_free != 0 {
+            if map[x][y] == ROLLING{
                 map[x][y] = EMPTY;
-                map[x][last_free] = ROLLING;
-                last_free -= 1;
+                map[x][last_stuck - 1] = ROLLING;
+                last_stuck -= 1;
             }
         }
     }
@@ -117,16 +93,37 @@ fn tilt_south(map: &mut Vec<Vec<u8>>) {
 fn tilt_east(map: &mut Vec<Vec<u8>>) {
     let side = map.len();
     for y in 0..side {
-        let mut last_free = side - 1;
+        let mut last_stuck = side;
         for x in (0..side).rev() {
-            if map[x][y] == ANCHOR && x != 0 {
-                last_free = x - 1;
+            if map[x][y] == ANCHOR{
+                last_stuck = x;
             }
-            if map[x][y] == ROLLING && last_free != 0 {
+            if map[x][y] == ROLLING{
                 map[x][y] = EMPTY;
-                map[last_free][y] = ROLLING;
-                last_free -= 1;
+                map[last_stuck - 1][y] = ROLLING;
+                last_stuck -= 1;
             }
         }
+    }
+}
+
+fn parse_input(input: String) -> Vec<Vec<u8>> {
+    let side = input.lines().count();
+    let mut map: Vec<Vec<u8>> = vec![vec![EMPTY; side]; side];
+
+    input.lines().enumerate().for_each(|(y, line)| {
+        line.chars().enumerate().for_each(|(x, c)| {
+            map[x][y] = parse_char(c);
+        });
+    });
+    map
+}
+
+fn parse_char(c: char) -> u8 {
+    match c {
+        'O' => ROLLING,
+        '.' => EMPTY,
+        '#' => ANCHOR,
+        _ => panic!("Unknown input: {c}")
     }
 }
