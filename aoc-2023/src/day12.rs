@@ -13,15 +13,16 @@ pub fn run(input: String) -> (usize, usize) {
     input.lines().for_each(|line| {
         let split: Vec<_> = line.split(" ").collect();
         let row: &str = split[0];
-        let seq: Vec<u8> = split_parse(",", split[1]);
-        let data: Vec<u8> = row.chars().map(parse_state).collect();
 
-        let expanded_row = [row, row, row, row, row].join("?");
-        let expanded_seq: Vec<u8> = seq.iter().cycle().take(seq.len() * 5).map(|x| *x).collect();
-        let expanded_data: Vec<u8> = expanded_row.chars().map(parse_state).collect();
-
+        let mut seq: Vec<u8> = split_parse(",", split[1]);
+        let mut data: Vec<u8> = row.chars().map(parse_state).collect();
         ans_1 += calculate(&mut HashMap::new(), 0, 0,&data[0..], &seq[0..]);
-        ans_2 += calculate(&mut HashMap::new(), 0, 0,&expanded_data[0..], &expanded_seq[0..]);
+
+        data.push(UNKNOWN);
+        data = data.repeat(5);
+        data.remove(data.len() - 1);
+        seq = seq.repeat(5);
+        ans_2 += calculate(&mut HashMap::new(), 0, 0,&data[0..], &seq[0..]);
     });
 
     (ans_1, ans_2)
