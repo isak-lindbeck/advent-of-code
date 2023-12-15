@@ -18,12 +18,10 @@ pub fn run(input: String) -> (usize, usize) {
         tilt_south(&mut map);
         tilt_east(&mut map);
 
-        if let Some(prev_cycle) = cache.get(&map) {
+        if let Some(prev_cycle) = cache.insert(map.clone(), cycle_count) {
             let loop_len = cycle_count - prev_cycle;
             let cycles_left = (cycle_goal - cycle_count) % loop_len;
             cycle_count = cycle_goal - cycles_left;
-        } else {
-            cache.insert(map.clone(), cycle_count);
         }
         cycle_count += 1;
     }
