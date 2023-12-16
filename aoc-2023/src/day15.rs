@@ -13,18 +13,15 @@ pub fn run(input: String) -> (usize, usize) {
 
     for s in &strings {
         if s.contains("=") {
-            let (label, fl) = s.split_once("=").unwrap();
+            let (label, focal_length) = s.split_once("=").unwrap();
+            let focal_length = focal_length.parse().unwrap();
             let hash = hash(label);
 
             let lens_box: &mut Vec<Lens<'_>> = &mut boxes[hash];
-
-            let in_box_pos = &lens_box.iter().find_position(|l| l.label == label);
-            let in_box_pos = in_box_pos.map(|(pos, _)| pos);
-            let fl = fl.parse().unwrap();
-
-            let lens = Lens { label, fl };
-            if in_box_pos.is_some() {
-                lens_box[in_box_pos.unwrap()] = lens;
+            let box_pos = &lens_box.iter().find_position(|l| l.label == label).map(|(p, _)| p);
+            let lens = Lens { label, focal_length };
+            if box_pos.is_some() {
+                lens_box[box_pos.unwrap()] = lens;
             } else {
                 lens_box.push(lens);
             }
@@ -33,9 +30,7 @@ pub fn run(input: String) -> (usize, usize) {
             let hash = hash(label);
 
             let lens_box: &mut Vec<Lens<'_>> = &mut boxes[hash];
-            let in_box_pos = &lens_box.iter().find_position(|l| l.label == label);
-            let in_box_pos = in_box_pos.map(|(pos, _)| pos);
-
+            let in_box_pos = &lens_box.iter().find_position(|l| l.label == label).map(|(p, _)| p);
             if in_box_pos.is_some() {
                 lens_box.remove(in_box_pos.unwrap());
             }
@@ -44,11 +39,10 @@ pub fn run(input: String) -> (usize, usize) {
 
     let mut ans_2 = 0;
 
-    for (i, b) in boxes.iter().enumerate() {
+    for (box_idx, b) in boxes.iter().enumerate() {
         if !b.is_empty() {
-            b.iter().enumerate().for_each(|(s, l)| {
-                ans_2 += (i + 1) * (s + 1) * l.fl
-
+            b.iter().enumerate().for_each(|(slot_idx, l)| {
+                ans_2 += (box_idx + 1) * (slot_idx + 1) * l.focal_length
             });
         }
     }
@@ -57,16 +51,14 @@ pub fn run(input: String) -> (usize, usize) {
 }
 
 fn hash(s: &str) -> usize {
-    let mut hash = 0;
-    s.chars().map(|c| c as usize).for_each(|ascii| {
-        hash = hash + ascii;
-        hash = hash * 17;
-        hash = hash % 256;
-    });
-    hash
+    s.chars().map(|c| c as usize).fold(0, |hash, ascii| {
+        let hash = hash + ascii;
+        let hash = hash * 17;
+        hash % 256
+    })
 }
 
 struct Lens<'a> {
     label: &'a str,
-    fl: usize,
+    focal_length: usize,
 }
