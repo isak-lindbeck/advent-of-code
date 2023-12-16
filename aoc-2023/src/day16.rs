@@ -1,3 +1,5 @@
+use std::cmp;
+
 const NORTH: u8 = 0b0000_0001;
 const SOUTH: u8 = 0b0000_0010;
 const WEST: u8 = 0b0000_0100;
@@ -5,7 +7,6 @@ const EAST: u8 = 0b0000_1000;
 
 pub fn run(input: String) -> (usize, usize) {
     let side = input.lines().count();
-    let mut passed: Vec<Vec<u8>> = vec![vec![0b0000_0000; side]; side];
     let mut map: Vec<Vec<char>> = vec![vec!['.'; side]; side];
     input.lines().enumerate().for_each(|(y, line)| {
         line.chars().enumerate().for_each(|(x, c)| {
@@ -13,8 +14,30 @@ pub fn run(input: String) -> (usize, usize) {
         });
     });
 
+    let initial_beam = Beam { x: 0, y: 0, direction: EAST };
+    let ans_1 = calculate(&map, initial_beam);
+
+    let mut ans_2 = 0;
+    for i in 0..side {
+        let initial_beam = Beam { x: i, y: 0, direction: SOUTH };
+        ans_2 = cmp::max(ans_2, calculate(&map, initial_beam));
+        let initial_beam = Beam { x: i, y: side - 1, direction: NORTH };
+        ans_2 = cmp::max(ans_2, calculate(&map, initial_beam));
+        let initial_beam = Beam { x: 0, y: i, direction: EAST };
+        ans_2 = cmp::max(ans_2, calculate(&map, initial_beam));
+        let initial_beam = Beam { x: side - 1, y: i, direction: WEST };
+        ans_2 = cmp::max(ans_2, calculate(&map, initial_beam));
+    }
+
+    (ans_1, ans_2)
+}
+
+fn calculate(map: &Vec<Vec<char>>, initial_beam: Beam) -> usize {
+    let side = map.len();
+    let mut passed: Vec<Vec<u8>> = vec![vec![0b0000_0000; side]; side];
+
     let mut beams: Vec<Beam> = Vec::new();
-    beams.push(Beam { x: 0, y: 0, direction: EAST });
+    beams.push(initial_beam);
 
     while !beams.is_empty() {
         let beam = beams.pop().unwrap();
@@ -23,7 +46,6 @@ pub fn run(input: String) -> (usize, usize) {
 
         let tile = passed[x][y];
         if beam.direction & tile != 0 {
-            // Already passed
             continue;
         }
         passed[x][y] = tile | beam.direction;
@@ -82,28 +104,16 @@ pub fn run(input: String) -> (usize, usize) {
         }
     }
 
-    let mut ans_1 = 0;
+    let mut energized = 0;
     for y in 0..side {
         for x in 0..side {
             let p = passed[x][y];
             if p > 0 {
-                match p {
-                    NORTH => print!("^"),
-                    SOUTH => print!("v"),
-                    EAST => print!(">"),
-                    WEST => print!("<"),
-                    _ => print!("#"),
-                }
-
-                ans_1 += 1;
-            } else {
-                print!(".")
+                energized += 1;
             }
         }
-        println!()
     }
-
-    (ans_1, 0)
+    energized
 }
 
 struct Beam {
