@@ -66,7 +66,6 @@ fn hash(s: &str) -> usize {
     hash
 }
 
-#[derive(Debug)]
 struct Lens<'a> {
     label: &'a str,
     fl: usize,
