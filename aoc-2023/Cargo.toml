@@ -12,3 +12,4 @@ regex-macro = { version = "0.2.0", features = [] }
 strum_macros = "0.25.3"
 regex = { version = "1.10.2", features = [] }
 num = "0.4.1"
+rayon = "1.8.0"
