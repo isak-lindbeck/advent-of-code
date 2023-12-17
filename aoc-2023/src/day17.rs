@@ -6,78 +6,80 @@ use priority_queue::PriorityQueue;
 pub fn run(input: String) -> (usize, usize) {
     let map = parse_input(input);
 
-    let ans_1 = calculate_distance(&map, 0..3);
-    let ans_2 = calculate_distance(&map, 3..10);
+    let ans_1 = calculate_djikstra(&map, 0..3);
+    let ans_2 = calculate_djikstra(&map, 3..10);
 
     (ans_1, ans_2)
 }
 
-fn calculate_distance(map: &Vec<Vec<usize>>, allowed_steps: Range<usize>) -> usize {
+fn calculate_djikstra(map: &Vec<Vec<usize>>, allowed_steps: Range<usize>) -> usize {
     let side = map.len();
-    let mut dist: Vec<Vec<Vec<usize>>> = vec![vec![vec![usize::MAX; 2]; side]; side];
-    dist[0][0][false as usize] = 0;
-    dist[0][0][true as usize] = 0;
+    let mut heat_cost: Vec<Vec<Vec<usize>>> = vec![vec![vec![usize::MAX; 2]; side]; side];
+    heat_cost[0][0][false as usize] = 0;
+    heat_cost[0][0][true as usize] = 0;
 
     let mut queue: PriorityQueue<(usize, usize, bool), Reverse<usize>> = PriorityQueue::new();
     queue.push((0, 0, true), Reverse(0));
     queue.push((0, 0, false), Reverse(0));
 
-    while !queue.is_empty() {
-        let (node, _) = queue.pop().unwrap();
+    while let Some((node, _)) = queue.pop() {
         let (x, y, flg) = node;
-
         if x == side - 1 && y == side - 1 {
             break;
         }
-
-        let mut neighbors: Vec<(usize, usize, bool)> = Vec::new();
-        if flg {
-            allowed_steps.clone().for_each(|dx| {
-                if x > dx {
-                    neighbors.push((x - dx - 1, y, !flg));
-                }
-                if x < side - dx - 1 {
-                    neighbors.push((x + dx + 1, y, !flg));
-                }
-            });
-        } else {
-            allowed_steps.clone().for_each(|dy| {
-                if y > dy {
-                    neighbors.push((x, y - dy - 1, !flg));
-                }
-                if y < side - dy - 1 {
-                    neighbors.push((x, y + dy + 1, !flg));
-                }
-            });
-        }
+        let neighbors = get_neighbours(&allowed_steps, side, node);
         for neighbour in neighbors {
             let (n_x, n_y, n_flg) = neighbour;
+            let move_cost = calculate_cost(map, node, neighbour);
 
-            let cost = if flg {
-                if x < n_x {
-                    (x + 1..=n_x).map(|i| map[i][y]).sum::<usize>()
-                } else {
-                    (n_x..x).map(|i| map[i][y]).sum::<usize>()
-                }
-            } else {
-                if y < n_y {
-                    (y + 1..=n_y).map(|i| map[x][i]).sum::<usize>()
-                } else {
-                    (n_y..y).map(|i| map[x][i]).sum::<usize>()
-                }
-            };
-
-            let alt = dist[x][y][flg as usize] + cost;
-            if alt < dist[n_x][n_y][n_flg as usize] {
-                dist[n_x][n_y][n_flg as usize] = alt;
-                queue.push(neighbour, Reverse(alt));
+            let new_cost = heat_cost[x][y][flg as usize] + move_cost;
+            let prev_cost = heat_cost[n_x][n_y][n_flg as usize];
+            if new_cost < prev_cost {
+                heat_cost[n_x][n_y][n_flg as usize] = new_cost;
+                queue.push(neighbour, Reverse(new_cost));
             }
         }
     }
+    let cost_1 = heat_cost[side - 1][side - 1][false as usize];
+    let cost_2 = heat_cost[side - 1][side - 1][true as usize];
+    cost_1.min(cost_2)
+}
 
-    let dist_1 = dist[side - 1][side - 1][false as usize];
-    let dist_2 = dist[side - 1][side - 1][true as usize];
-    dist_1.min(dist_2)
+fn get_neighbours(allowed_steps: &Range<usize>, side: usize, node: (usize, usize, bool)) -> Vec<(usize, usize, bool)> {
+    let (x, y, flg) = node;
+    let mut neighbors: Vec<(usize, usize, bool)> = Vec::new();
+    if flg {
+        allowed_steps.clone().for_each(|dx| {
+            if x > dx {
+                neighbors.push((x - dx - 1, y, !flg));
+            }
+            if x < side - dx - 1 {
+                neighbors.push((x + dx + 1, y, !flg));
+            }
+        });
+    } else {
+        allowed_steps.clone().for_each(|dy| {
+            if y > dy {
+                neighbors.push((x, y - dy - 1, !flg));
+            }
+            if y < side - dy - 1 {
+                neighbors.push((x, y + dy + 1, !flg));
+            }
+        });
+    }
+    neighbors
+}
+
+fn calculate_cost(map: &Vec<Vec<usize>>, from: (usize, usize, bool), to: (usize, usize, bool)) -> usize {
+    let (f_x, f_y, flg) = from;
+    let (t_x, t_y, _) = to;
+    let range = match flg {
+        true if f_x < t_x => f_x + 1..t_x + 1,
+        true => t_x..f_x,
+        false if f_y < t_y => f_y + 1..t_y + 1,
+        false => t_y..f_y,
+    };
+    range.map(|i| if flg { map[i][f_y] } else { map[f_x][i]}).sum::<usize>()
 }
 
 fn parse_input(input: String) -> Vec<Vec<usize>> {
