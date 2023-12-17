@@ -24,9 +24,10 @@ mod day13;
 mod day14;
 mod day15;
 mod day16;
+mod day17;
 
 fn main() {
-    let mut days = 1..=16;
+    let mut days = 1..=17;
 
     let args: Vec<String> = env::args().collect();
     if args.len() > 1 {
@@ -56,6 +57,7 @@ fn main() {
             14 => { day14::run(input) }
             15 => { day15::run(input) }
             16 => { day16::run(input) }
+            17 => { day17::run(input) }
             _ => { panic!("Day {} is not implemented yet", day); }
         };
 

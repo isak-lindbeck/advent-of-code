@@ -1,5 +1,4 @@
-use rayon::iter::IntoParallelIterator;
-use rayon::iter::ParallelIterator;
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 const NORTH: u8 = 0b0001;
 const SOUTH: u8 = 0b0010;
@@ -31,7 +30,7 @@ struct Beam {
 
 fn calculate(map: &Vec<Vec<char>>, initial_beam: Beam) -> usize {
     let side = map.len();
-    let mut traversed: Vec<Vec<u8>> = vec![vec![0b0000_0000; side]; side];
+    let mut traversed: Vec<Vec<u8>> = vec![vec![0b0000; side]; side];
 
     let mut beams: Vec<Beam> = Vec::new();
     beams.push(initial_beam);
