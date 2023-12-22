@@ -11,9 +11,7 @@ pub fn run(input: String) -> (usize, usize) {
         });
     });
 
-    let map_clone = map.clone();
-
-    for i in 0..64 {
+    for _ in 0..64 {
         let map_clone = map.clone();
         for y in 0..side {
             for x in 0..side {
