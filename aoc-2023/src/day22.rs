@@ -16,39 +16,41 @@ pub fn run(input: String) -> (usize, usize) {
             z_1: from[2],
             x_2: to[0],
             y_2: to[1],
-            z_2: to[2]
+            z_2: to[2],
         }
     })
         .sorted_by(|a, b| a.z_1.min(a.z_2).cmp(&b.z_1.min(b.z_2)))
         .collect();
 
-    println!("max_x: {}, max_y: {}", max_x, max_y);
-
     let mut stack: Vec<Vec<usize>> = vec![vec![0; max_x + 1]; max_y + 1];
 
-    for bick_line in brick_lines.iter_mut() {
+    for brick_line in brick_lines.iter_mut() {
         let mut max_z = 0;
-        for x in bick_line.x_1..=bick_line.x_2 {
-            for y in bick_line.y_1..=bick_line.y_2 {
+        for x in brick_line.x_1..=brick_line.x_2 {
+            for y in brick_line.y_1..=brick_line.y_2 {
                 max_z = max_z.max(stack[x][y]);
             }
         }
-        let drop = bick_line.z_1 - (max_z + 1);
-        max_z += bick_line.z_2 - bick_line.z_1 + 1;
+        let drop = brick_line.z_1 - (max_z + 1);
+        max_z += brick_line.z_2 - brick_line.z_1 + 1;
 
-        for x in bick_line.x_1..=bick_line.x_2 {
-            for y in bick_line.y_1..=bick_line.y_2 {
+        for x in brick_line.x_1..=brick_line.x_2 {
+            for y in brick_line.y_1..=brick_line.y_2 {
                 stack[x][y] = max_z;
             }
         }
-        bick_line.z_1 = bick_line.z_1 - drop;
-        bick_line.z_2 = bick_line.z_2 - drop;
+        brick_line.z_1 = brick_line.z_1 - drop;
+        brick_line.z_2 = brick_line.z_2 - drop;
     }
 
-    let mut critical_brick_lines : Vec<bool> = vec![false; brick_lines.len()];
-
-    for brick_line in &brick_lines {
-        let supporting_bl: Vec<usize> = brick_lines.iter().enumerate()
+    let mut critical_brick_lines: Vec<bool> = vec![false; brick_lines.len()];
+    let mut supported_by: Vec<Vec<usize>> = Vec::new();
+    for _ in 0..brick_lines.len() {
+        supported_by.push(Vec::new());
+    }
+    for (i, brick_line) in brick_lines.iter().enumerate() {
+        let mut sup_by: Vec<usize> = brick_lines.iter().enumerate()
+            .filter(|(j,_)| *j != i)
             .filter(|(_, b)| b.z_2 + 1 == brick_line.z_1)
             .filter(|(_, b)| {
                 let share_x = brick_line.x_1 <= b.x_2 && b.x_1 <= brick_line.x_2;
@@ -58,13 +60,31 @@ pub fn run(input: String) -> (usize, usize) {
             .map(|(i, _)| i)
             .collect();
 
-        if supporting_bl.len() == 1 {
-            critical_brick_lines[supporting_bl[0]] = true;
+        if sup_by.len() == 1 {
+            critical_brick_lines[sup_by[0]] = true;
         }
+
+        supported_by[i] = sup_by;
+    }
+
+    let mut ans_2 = 0;
+    for (i, _) in brick_lines.iter().enumerate() {
+        let mut removed: Vec<bool> = vec![false; brick_lines.len()];
+        removed[i] = true;
+        let mut total_removed = 0;
+        for j in 0..brick_lines.len() {
+            let supports_left = supported_by[j].iter().filter(|idx| removed[**idx] == false).count();
+            if supported_by[j].len() != 0 && supports_left == 0 {
+                removed[j] = true;
+                total_removed += 1;
+            }
+        }
+        // println!("{i}: {total_removed}");
+        ans_2 += total_removed;
     }
 
     let ans_1 = critical_brick_lines.iter().filter(|critical| !(**critical)).count();
-    (ans_1, 0)
+    (ans_1, ans_2) // 53076 to high
 }
 
 #[derive(Debug)]
