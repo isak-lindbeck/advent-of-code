@@ -105,10 +105,10 @@ pub fn run(input: String) -> (usize, usize) {
 
     let mut button_presses = 0;
     let mut rx_low_signals = 0;
-    let mut rx_high_signals = 0;
+    let mut _rx_high_signals = 0;
     while !(rx_low_signals >= 1) {
         rx_low_signals = 0;
-        rx_high_signals = 0;
+        _rx_high_signals = 0;
         let mut work_queue: Vec<(Signal, &ModuleId, &ModuleId)> = Vec::new();
         work_queue.push((Low, &button_id, &broadcaster_id));
         button_presses += 1;
@@ -121,7 +121,7 @@ pub fn run(input: String) -> (usize, usize) {
             match signal {
                 High => {
                     if target_id.0 == "output" {
-                        rx_high_signals += 1;
+                        _rx_high_signals += 1;
                     }
                     sum_high += 1
                 }
