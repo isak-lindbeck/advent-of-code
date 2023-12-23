@@ -49,7 +49,7 @@ pub fn run(input: String) -> (usize, usize) {
         supported_by.push(Vec::new());
     }
     for (i, brick_line) in brick_lines.iter().enumerate() {
-        let mut sup_by: Vec<usize> = brick_lines.iter().enumerate()
+        let sup_by: Vec<usize> = brick_lines.iter().enumerate()
             .filter(|(j,_)| *j != i)
             .filter(|(_, b)| b.z_2 + 1 == brick_line.z_1)
             .filter(|(_, b)| {
@@ -79,12 +79,11 @@ pub fn run(input: String) -> (usize, usize) {
                 total_removed += 1;
             }
         }
-        // println!("{i}: {total_removed}");
         ans_2 += total_removed;
     }
 
     let ans_1 = critical_brick_lines.iter().filter(|critical| !(**critical)).count();
-    (ans_1, ans_2) // 53076 to high
+    (ans_1, ans_2)
 }
 
 #[derive(Debug)]
