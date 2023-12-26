@@ -14,16 +14,14 @@ pub fn run(input: String) -> (usize, usize) {
                 node_ids.insert(&a, nxt_idx);
                 graph.push(Vec::new());
             }
-            let a = node_ids[a];
-
             connected.iter().for_each(|c| {
                 if !node_ids.keys().contains(&c) {
                     let nxt_idx = node_ids.len();
                     node_ids.insert(&c, nxt_idx);
                     graph.push(Vec::new());
                 }
+                let a = node_ids[a];
                 let c = node_ids[c];
-
                 graph[a].push(c);
                 graph[c].push(a);
             })
@@ -33,11 +31,11 @@ pub fn run(input: String) -> (usize, usize) {
     let mut same_cluster: HashSet<usize> = HashSet::new();
     same_cluster.insert(start);
     for idx in 0..graph.len() {
-        let mut traversed: HashSet<(usize, usize)> = HashSet::new();
+        let mut traversed: Vec<Vec<bool>> = vec![vec![false; graph.len()]; graph.len()];
         (0..3).for_each(|_| {
             if let Some(path) = djikstra(&graph, start, idx, &mut traversed) {
                 path.windows(2).for_each(|i| {
-                    traversed.insert((i[1], i[0]));
+                    traversed[i[1]][i[0]] = true;
                 });
             }
         });
@@ -51,7 +49,7 @@ pub fn run(input: String) -> (usize, usize) {
     (ans_1, 0)
 }
 
-fn djikstra(graph: &Vec<Vec<usize>>, from: usize, to: usize, traversed: &mut HashSet<(usize, usize)>) -> Option<Vec<usize>> {
+fn djikstra(graph: &Vec<Vec<usize>>, from: usize, to: usize, traversed: &Vec<Vec<bool>>) -> Option<Vec<usize>> {
     let mut dist = vec![usize::MAX; graph.len()];
     let mut prev = vec![None; graph.len()];
     dist[from] = 0;
@@ -62,29 +60,28 @@ fn djikstra(graph: &Vec<Vec<usize>>, from: usize, to: usize, traversed: &mut Has
         if cur == to {
             break;
         }
-        for &n in &graph[cur] {
-            if traversed.contains(&(cur, n)) {
-                continue;
-            }
-            let alt = dist[cur] + 1;
-            if alt < dist[n] {
-                dist[n] = alt;
-                prev[n] = Some(cur);
-                queue.push_back(n);
-            }
-        }
+        graph[cur].iter()
+            .filter(|&n| !traversed[cur][*n])
+            .for_each(|&n| {
+                let alt = dist[cur] + 1;
+                if alt < dist[n] {
+                    dist[n] = alt;
+                    prev[n] = Some(cur);
+                    queue.push_back(n);
+                }
+            });
     }
 
     if prev[to].is_none() {
-        return None;
-    }
-
-    let mut path: Vec<usize> = Vec::new();
-    let mut current = to;
-    path.push(current);
-    while let Some(p) = prev[current] {
-        current = p;
+        None
+    } else {
+        let mut path: Vec<usize> = Vec::new();
+        let mut current = to;
         path.push(current);
+        while let Some(p) = prev[current] {
+            current = p;
+            path.push(current);
+        }
+        Some(path)
     }
-    Some(path)
 }
