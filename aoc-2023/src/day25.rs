@@ -1,6 +1,7 @@
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, VecDeque};
 
 use itertools::Itertools;
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 pub fn run(input: String) -> (usize, usize) {
     let mut graph: Vec<Vec<usize>> = Vec::new();
@@ -28,9 +29,7 @@ pub fn run(input: String) -> (usize, usize) {
         });
 
     let start = 0;
-    let mut same_cluster: HashSet<usize> = HashSet::new();
-    same_cluster.insert(start);
-    for idx in 0..graph.len() {
+    let same_cluster = (1..graph.len()).into_par_iter().filter(|&idx| {
         let mut traversed: Vec<Vec<bool>> = vec![vec![false; graph.len()]; graph.len()];
         (0..3).for_each(|_| {
             if let Some(path) = djikstra(&graph, start, idx, &mut traversed) {
@@ -41,11 +40,10 @@ pub fn run(input: String) -> (usize, usize) {
         });
 
         let path = djikstra(&graph, start, idx, &mut traversed);
-        if path.is_some() {
-            same_cluster.insert(idx);
-        }
-    }
-    let ans_1 = same_cluster.len() * (graph.len() - same_cluster.len());
+        path.is_some()
+    }).count();
+    let same_cluster = same_cluster + 1;
+    let ans_1 = same_cluster * (graph.len() - same_cluster);
     (ans_1, 0)
 }
 
